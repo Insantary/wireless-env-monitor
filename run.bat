@@ -1,19 +1,50 @@
 @echo off
 
-:: Try py launcher first, then python, then full path
 set PYTHON=
-where py >nul 2>&1 && set PYTHON=py -3
-if "%PYTHON%"=="" (
-    python -c "import sys; exit(0 if 'WindowsApps' not in sys.executable else 1)" >nul 2>&1
-    if not errorlevel 1 set PYTHON=python
+
+:: 1. Try py launcher (most reliable on Windows)
+where py >nul 2>&1
+if not errorlevel 1 (
+    py -3 --version >nul 2>&1
+    if not errorlevel 1 set PYTHON=py -3
 )
+
+:: 2. Try python in PATH (skip Windows Store stub)
 if "%PYTHON%"=="" (
-    if exist "C:\Users\fhd\AppData\Local\Python\pythoncore-3.14-64\python.exe" (
-        set PYTHON=C:\Users\fhd\AppData\Local\Python\pythoncore-3.14-64\python.exe
+    for /f "delims=" %%i in ('where python 2^>nul') do (
+        if "%PYTHON%"=="" (
+            echo %%i | findstr /i "WindowsApps" >nul
+            if errorlevel 1 set PYTHON=%%i
+        )
     )
 )
+
+:: 3. Search common install locations
+if "%PYTHON%"=="" (
+    for %%v in (313 312 311 310 39 38) do (
+        if "%PYTHON%"=="" (
+            for %%d in (
+                "%LOCALAPPDATA%\Programs\Python\Python%%v\python.exe"
+                "%LOCALAPPDATA%\Python\pythoncore-3.%%v-64\python.exe"
+                "C:\Python%%v\python.exe"
+                "%ProgramFiles%\Python%%v\python.exe"
+            ) do (
+                if "%PYTHON%"=="" if exist %%d set PYTHON=%%d
+            )
+        )
+    )
+)
+
+:: 4. Broader search in common folders
+if "%PYTHON%"=="" (
+    for /f "delims=" %%f in ('dir /b /s "%LOCALAPPDATA%\python.exe" 2^>nul ^| findstr /v "WindowsApps" ^| head -1') do (
+        if "%PYTHON%"=="" set PYTHON=%%f
+    )
+)
+
 if "%PYTHON%"=="" goto nopython
 
+echo Found Python: %PYTHON%
 echo Installing matplotlib...
 %PYTHON% -m pip install matplotlib -q
 
@@ -26,9 +57,16 @@ goto end
 echo.
 echo =====================================================
 echo  Python not found!
-echo  Install from: https://www.python.org/downloads/
-echo  Check "Add Python to PATH" during install.
+echo.
+echo  1. Download Python 3 from:
+echo     https://www.python.org/downloads/
+echo.
+echo  2. During install, CHECK this box:
+echo     [v] Add Python to PATH
+echo.
+echo  3. Re-run this script after installing.
 echo =====================================================
+echo.
 pause
 
 :end
