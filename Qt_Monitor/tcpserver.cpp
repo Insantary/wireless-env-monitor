@@ -22,11 +22,12 @@ void TcpServer::sendCmd(const QString &cmd) {
 }
 
 void TcpServer::onNewConnection() {
-    if (m_client) {          // 只保留最新连接
+    if (m_client) {
         m_client->disconnectFromHost();
         m_client->deleteLater();
     }
     m_client = m_server->nextPendingConnection();
+    m_stats  = PacketStats{};   // 新连接重置统计
     connect(m_client, &QTcpSocket::readyRead,    this, &TcpServer::onReadyRead);
     connect(m_client, &QTcpSocket::disconnected, this, &TcpServer::onDisconnected);
     emit clientConnected();
@@ -46,10 +47,23 @@ void TcpServer::onReadyRead() {
 
         QJsonObject obj = doc.object();
         SensorData d;
-        d.temp  = obj["temp"].toDouble();
-        d.humi  = obj["humi"].toDouble();
+        d.temp  = (float)obj["temp"].toDouble();
+        d.humi  = (float)obj["humi"].toDouble();
         d.light = obj["light"].toInt();
+        d.pres  = (float)obj.value("pres").toDouble(1013.25);  // 默认标准气压
+        d.seq   = obj.value("seq").toInt(-1);
+
+        // 丢包检测
+        m_stats.total++;
+        if (d.seq >= 0 && m_stats.lastSeq >= 0) {
+            int expected = m_stats.lastSeq + 1;
+            if (d.seq > expected)
+                m_stats.lost += d.seq - expected;
+        }
+        if (d.seq >= 0) m_stats.lastSeq = d.seq;
+
         emit dataReceived(d);
+        emit statsUpdated(m_stats.total, m_stats.lost);
     }
 }
 

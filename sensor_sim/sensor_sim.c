@@ -32,23 +32,27 @@
 #define INTERVAL_MS 2000
 
 /* 模拟传感器值，带随机漂移 */
-static float sim_temp  = 25.0f;
-static float sim_humi  = 55.0f;
-static float sim_light = 60.0f;
+static float    sim_temp  = 25.0f;
+static float    sim_humi  = 55.0f;
+static float    sim_light = 60.0f;
+static float    sim_pres  = 1013.25f;  /* BMP280 I2C 气压 hPa */
+static unsigned sim_seq   = 0;
 
 static void update_sensors(void) {
-    /* 小幅随机漂移，模拟真实传感器波动 */
     sim_temp  += ((rand() % 21) - 10) * 0.1f;
     sim_humi  += ((rand() % 21) - 10) * 0.2f;
     sim_light += ((rand() % 21) - 10) * 0.5f;
+    sim_pres  += ((rand() % 11) -  5) * 0.1f;
 
-    /* 限制范围 */
     if (sim_temp  < 10.0f) sim_temp  = 10.0f;
     if (sim_temp  > 40.0f) sim_temp  = 40.0f;
     if (sim_humi  < 20.0f) sim_humi  = 20.0f;
     if (sim_humi  > 95.0f) sim_humi  = 95.0f;
     if (sim_light <  0.0f) sim_light =  0.0f;
     if (sim_light >100.0f) sim_light =100.0f;
+    if (sim_pres  <1005.0f) sim_pres = 1005.0f;
+    if (sim_pres  >1025.0f) sim_pres = 1025.0f;
+    sim_seq++;
 }
 
 int main(void) {
@@ -108,8 +112,8 @@ int main(void) {
 
             char buf[128];
             snprintf(buf, sizeof(buf),
-                     "{\"temp\":%.1f,\"humi\":%.1f,\"light\":%d}\n",
-                     sim_temp, sim_humi, (int)sim_light);
+                     "{\"seq\":%u,\"temp\":%.1f,\"humi\":%.1f,\"light\":%d,\"pres\":%.1f}\n",
+                     sim_seq, sim_temp, sim_humi, (int)sim_light, sim_pres);
 
             int sent = send(fd, buf, (int)strlen(buf), 0);
             if (sent == ERR) {
