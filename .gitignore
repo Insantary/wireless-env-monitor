@@ -27,5 +27,3 @@ gen_report.py
 # ESP32旧版（用PIO版替代）
 ESP32_Sensor/
 
-# Qt旧版（用Python monitor替代）
-Qt_Monitor/
