@@ -12,6 +12,34 @@ ESP32-S3（DHT11 + 光敏电阻）
 上位机 Python 监控界面（实时曲线 + 报警 + CSV存储）
 ```
 
+---
+
+## 快速运行（无需硬件，3步搞定）
+
+### 前提
+- 已安装 **Python 3.x**（[下载地址](https://www.python.org/downloads/)，安装时勾选"Add to PATH"）
+
+### 方法一：双击一键运行（推荐）
+
+> **直接双击 `一键运行_模拟模式.bat`**，等待自动安装依赖后界面弹出。
+
+### 方法二：手动运行
+
+```bash
+# 安装依赖
+pip install matplotlib
+
+# 1. 先启动上位机（等界面出来再执行下一步）
+python monitor/monitor.py
+
+# 2. 另开一个命令行窗口，启动传感器模拟器
+sensor_sim\sensor_sim.exe
+```
+
+启动后界面左上角状态显示**绿色"已连接"**即为成功。
+
+---
+
 ## 硬件接线
 
 | 传感器 | 引脚 | ESP32-S3 |
@@ -23,6 +51,8 @@ ESP32-S3（DHT11 + 光敏电阻）
 | 光敏模块 VCC | — | 3.3V |
 | 光敏模块 GND | — | GND |
 
+---
+
 ## 目录结构
 
 ```
@@ -32,37 +62,28 @@ ESP32-S3（DHT11 + 光敏电阻）
 ├── monitor/
 │   └── monitor.py          # 上位机监控界面（Python）
 ├── sensor_sim/
-│   ├── sensor_sim.c        # 传感器数据模拟器（C语言）
-│   └── sensor_sim.exe      # Windows可执行文件
+│   ├── sensor_sim.c        # 传感器数据模拟器（C语言源码）
+│   └── sensor_sim.exe      # Windows可执行文件（直接运行）
+├── Qt_Monitor/             # Qt C++ 监控界面（备用方案）
+│   ├── Qt_Monitor.pro
+│   ├── main.cpp
+│   ├── mainwindow.h/cpp
+│   └── tcpserver.h/cpp
 ├── report_images/          # 报告配图
+├── requirements.txt        # Python依赖
+├── 一键运行_模拟模式.bat    # Windows一键启动脚本
 └── 课程设计报告_李欣.docx   # 完整课程设计报告
 ```
 
-## 快速开始
+---
 
-### 方式一：模拟运行（无需硬件）
-
-```bash
-# 1. 启动上位机
-python monitor/monitor.py
-
-# 2. 启动模拟器
-sensor_sim/sensor_sim.exe
-```
-
-### 方式二：真实硬件
+## 真实硬件运行
 
 1. 修改 `ESP32_Sensor_PIO/src/main.cpp` 中的 WiFi 名称、密码、服务器 IP
-2. PlatformIO 烧录（COM7 / CH340）
+2. PlatformIO 烧录（使用 CH340 口，COM7）
 3. 启动上位机 `python monitor/monitor.py`
 
-## 上位机依赖
-
-```bash
-pip install matplotlib
-```
-
-Python 3.x + tkinter（内置）
+---
 
 ## 功能特性
 
@@ -72,8 +93,11 @@ Python 3.x + tkinter（内置）
 - 数据自动保存至 `sensor_data.csv`
 - 断线自动重连
 
+---
+
 ## 开发环境
 
 - 设备端：PlatformIO + Arduino Framework（ESP32-S3）
 - 上位机：Python 3 + Tkinter + Matplotlib
 - 通信协议：TCP，JSON 格式，2秒/包
+- Qt界面：Qt5/Qt6 + QChart（需自行安装Qt）
