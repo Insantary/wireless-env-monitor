@@ -1,0 +1,31 @@
+# 临时文件
+~$*.docx
+*.tmp
+*.log
+
+# Claude内部配置
+.claude/
+
+# 全屏截图（含隐私）
+report_images/screenshot_full.png
+
+# 原始题目文档
+2026*.docx
+
+# Python缓存
+__pycache__/
+*.pyc
+.pio/
+
+# 生成脚本（不需要提交）
+gen_images.py
+gen_images2.py
+gen_report.py
+题目内容.txt
+课程设计报告_方浩东.docx
+
+# ESP32旧版（用PIO版替代）
+ESP32_Sensor/
+
+# Qt旧版（用Python monitor替代）
+Qt_Monitor/
